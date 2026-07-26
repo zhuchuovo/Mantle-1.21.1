@@ -23,16 +23,16 @@ public class EdibleItem extends Item {
 
   public EdibleItem(Item.Properties properties) {
     super(properties);
-    Objects.requireNonNull(foodProperties, "Must set food to make an EdibleItem");
   }
 
   @Override
-  public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
+  public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flagIn) {
     TranslationHelper.addOptionalTooltip(stack, tooltip);
     // TODO: use ContainerFoodItem helper for more potion like effects?
-    for (Pair<MobEffectInstance, Float> pair : Objects.requireNonNull(stack.getItem().getFoodProperties(stack, null)).getEffects()) {
-      if (pair.getFirst() != null) {
-        tooltip.add(Component.literal(I18n.get(pair.getFirst().getDescriptionId()).trim()).withStyle(ChatFormatting.GRAY));
+    for (FoodProperties.PossibleEffect possibleEffect : Objects.requireNonNull(stack.getFoodProperties(null)).effects()) {
+      MobEffectInstance effect = possibleEffect.effect();
+      if (effect != null) {
+        tooltip.add(Component.literal(I18n.get(effect.getDescriptionId()).trim()).withStyle(ChatFormatting.GRAY));
       }
     }
   }

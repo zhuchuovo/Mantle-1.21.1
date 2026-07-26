@@ -2,6 +2,7 @@ package slimeknights.mantle.loot;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.storage.loot.entries.LootPoolEntries;
 import net.minecraft.world.level.storage.loot.LootPool;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.entries.LootPoolEntryContainer;
@@ -11,7 +12,6 @@ import slimeknights.mantle.data.loadable.primitive.StringLoadable;
 import slimeknights.mantle.data.loadable.record.RecordLoadable;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -42,11 +42,16 @@ public record LootTableInjection(ResourceLocation name, List<LootPoolInjection> 
     /** Injects this into the given loot pool */
     public void inject(LootTable table) {
       LootPool pool = table.getPool(name);
-      //noinspection ConstantConditions method is annotated wrongly
       if (pool != null) {
-        int oldLength = pool.entries.length;
-        pool.entries = Arrays.copyOf(pool.entries, oldLength + entries.length);
-        System.arraycopy(entries, 0, pool.entries, oldLength, entries.length);
+        // 1.21 loot pools can contain registry-backed holder sets (notably the
+        // on_random_loot enchantment tag). Encoding and decoding a live pool
+        // during reload validates those holders against an incomplete lookup
+        // and aborts world creation. The access transformer exposes the entry
+        // list, so merge the new entries directly and preserve the rest of the
+        // already-decoded vanilla pool unchanged.
+        List<LootPoolEntryContainer> merged = new ArrayList<>(pool.entries);
+        Collections.addAll(merged, entries);
+        pool.entries = List.copyOf(merged);
       } else {
         Mantle.logger.warn("Failed to inject loot into {} pool {}", table.getLootTableId(), name);
       }

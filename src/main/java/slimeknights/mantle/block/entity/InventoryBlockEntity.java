@@ -2,7 +2,7 @@ package slimeknights.mantle.block.entity;
 
 import lombok.Getter;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -16,11 +16,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.items.IItemHandlerModifiable;
-import net.minecraftforge.items.wrapper.InvWrapper;
+import net.neoforged.neoforge.items.IItemHandlerModifiable;
+import net.neoforged.neoforge.items.wrapper.InvWrapper;
 import slimeknights.mantle.util.ItemStackList;
 
 import javax.annotation.Nonnull;
@@ -38,7 +35,6 @@ public abstract class InventoryBlockEntity extends NameableBlockEntity implement
   protected int stackSizeLimit;
   @Getter
   protected IItemHandlerModifiable itemHandler;
-  protected LazyOptional<IItemHandlerModifiable> itemHandlerCap;
 
   /**
    * @param name Localization String for the inventory title. Can be overridden through setCustomName
@@ -56,22 +52,6 @@ public abstract class InventoryBlockEntity extends NameableBlockEntity implement
     this.inventory = NonNullList.withSize(inventorySize, ItemStack.EMPTY);
     this.stackSizeLimit = maxStackSize;
     this.itemHandler = new InvWrapper(this);
-    this.itemHandlerCap = LazyOptional.of(() -> this.itemHandler);
-  }
-
-  @Nonnull
-  @Override
-  public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction facing) {
-    if (capability == ForgeCapabilities.ITEM_HANDLER) {
-      return this.itemHandlerCap.cast();
-    }
-    return super.getCapability(capability, facing);
-  }
-
-  @Override
-  public void invalidateCaps() {
-    super.invalidateCaps();
-    this.itemHandlerCap.invalidate();
   }
 
   /* Inventory management */
@@ -210,12 +190,12 @@ public abstract class InventoryBlockEntity extends NameableBlockEntity implement
   /* NBT */
 
   @Override
-  public void load(CompoundTag tags) {
-    super.load(tags);
+  protected void loadAdditional(CompoundTag tags, HolderLookup.Provider registries) {
+    super.loadAdditional(tags, registries);
     if (saveSizeToNBT) {
       this.resizeInternal(tags.getInt(TAG_INVENTORY_SIZE));
     }
-    this.readInventoryFromNBT(tags);
+    this.readInventoryFromNBT(tags, registries);
   }
 
   @Override
@@ -228,23 +208,22 @@ public abstract class InventoryBlockEntity extends NameableBlockEntity implement
   }
   
   @Override
-  public void saveAdditional(CompoundTag tags) {
-    super.saveAdditional(tags);
-    this.writeInventoryToNBT(tags);
+  protected void saveAdditional(CompoundTag tags, HolderLookup.Provider registries) {
+    super.saveAdditional(tags, registries);
+    this.writeInventoryToNBT(tags, registries);
   }
 
   /**
    * Writes the contents of the inventory to the tag
    */
-  public void writeInventoryToNBT(CompoundTag tag) {
+  public void writeInventoryToNBT(CompoundTag tag, HolderLookup.Provider registries) {
     Container inventory = this;
     ListTag nbttaglist = new ListTag();
 
     for (int i = 0; i < inventory.getContainerSize(); i++) {
       if (!inventory.getItem(i).isEmpty()) {
-        CompoundTag itemTag = new CompoundTag();
+        CompoundTag itemTag = (CompoundTag)inventory.getItem(i).save(registries);
         itemTag.putByte(TAG_SLOT, (byte) i);
-        inventory.getItem(i).save(itemTag);
         nbttaglist.add(itemTag);
       }
     }
@@ -255,7 +234,7 @@ public abstract class InventoryBlockEntity extends NameableBlockEntity implement
   /**
    * Reads an inventory from the tag. Overwrites current content
    */
-  public void readInventoryFromNBT(CompoundTag tag) {
+  public void readInventoryFromNBT(CompoundTag tag, HolderLookup.Provider registries) {
     ListTag list = tag.getList(TAG_ITEMS, Tag.TAG_COMPOUND);
 
     int limit = this.getMaxStackSize();
@@ -264,7 +243,7 @@ public abstract class InventoryBlockEntity extends NameableBlockEntity implement
       CompoundTag itemTag = list.getCompound(i);
       int slot = itemTag.getByte(TAG_SLOT) & 255;
       if (slot < this.inventory.size()) {
-        stack = ItemStack.of(itemTag);
+        stack = ItemStack.parseOptional(registries, itemTag);
         if (!stack.isEmpty() && stack.getCount() > limit) {
           stack.setCount(limit);
         }

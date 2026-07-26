@@ -12,21 +12,90 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.IceBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.LiquidBlockContainer;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.event.ForgeEventFactory;
-import net.minecraftforge.fluids.ForgeFlowingFluid;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.neoforged.neoforge.event.EventHooks;
+import net.neoforged.neoforge.fluids.BaseFlowingFluid;
 
 import java.util.Map;
 
 /** Fluid where up is down and down is up */
-public abstract class InvertedFluid extends ForgeFlowingFluid {
+public abstract class InvertedFluid extends BaseFlowingFluid {
   protected InvertedFluid(Properties properties) {
     super(properties);
+  }
+
+  private boolean affectsFlow(FluidState state) {
+    return state.isEmpty() || state.getType().isSame(this);
+  }
+
+  private void spreadToSides(Level level, BlockPos pos, FluidState fluid, BlockState block) {
+    int amount = fluid.getAmount() - this.getDropOff(level);
+    if (fluid.getValue(FALLING)) {
+      amount = 7;
+    }
+    if (amount > 0) {
+      for (Map.Entry<Direction,FluidState> entry : this.getSpread(level, pos, block).entrySet()) {
+        Direction direction = entry.getKey();
+        BlockPos side = pos.relative(direction);
+        BlockState sideBlock = level.getBlockState(side);
+        if (this.canSpreadTo(level, pos, block, direction, side, sideBlock, level.getFluidState(side), entry.getValue().getType())) {
+          this.spreadTo(level, side, sideBlock, direction, entry.getValue());
+        }
+      }
+    }
+  }
+
+  private boolean canPassThroughWall(Direction direction, BlockGetter level, BlockPos pos, BlockState state, BlockPos spreadPos, BlockState spreadState) {
+    return !Shapes.mergedFaceOccludes(state.getCollisionShape(level, pos), spreadState.getCollisionShape(level, spreadPos), direction);
+  }
+
+  private static short getCacheKey(BlockPos sourcePos, BlockPos spreadPos) {
+    int x = spreadPos.getX() - sourcePos.getX();
+    int z = spreadPos.getZ() - sourcePos.getZ();
+    return (short)((x + 128 & 0xFF) << 8 | z + 128 & 0xFF);
+  }
+
+  private boolean canPassThrough(BlockGetter level, Fluid fluid, BlockPos pos, BlockState state, Direction direction, BlockPos spreadPos, BlockState spreadState, FluidState fluidState) {
+    return !this.isSourceBlockOfThisType(fluidState)
+      && this.canPassThroughWall(direction, level, pos, state, spreadPos, spreadState)
+      && this.canHoldFluid(level, spreadPos, spreadState, fluid);
+  }
+
+  private boolean isSourceBlockOfThisType(FluidState state) {
+    return state.getType().isSame(this) && state.isSource();
+  }
+
+  private int sourceNeighborCount(LevelReader level, BlockPos pos) {
+    int count = 0;
+    for (Direction direction : Direction.Plane.HORIZONTAL) {
+      if (this.isSourceBlockOfThisType(level.getFluidState(pos.relative(direction)))) {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  private boolean canHoldFluid(BlockGetter level, BlockPos pos, BlockState state, Fluid fluid) {
+    Block block = state.getBlock();
+    if (block instanceof LiquidBlockContainer container) {
+      return container.canPlaceLiquid(null, level, pos, state, fluid);
+    }
+    if (block instanceof DoorBlock || state.is(BlockTags.SIGNS) || state.is(Blocks.LADDER) || state.is(Blocks.SUGAR_CANE) || state.is(Blocks.BUBBLE_COLUMN)) {
+      return false;
+    }
+    return !state.is(Blocks.NETHER_PORTAL) && !state.is(Blocks.END_PORTAL) && !state.is(Blocks.END_GATEWAY)
+      && !state.is(Blocks.STRUCTURE_VOID) && !state.blocksMotion();
   }
 
   @Override
@@ -113,7 +182,7 @@ public abstract class InvertedFluid extends ForgeFlowingFluid {
       BlockState sideBlock = level.getBlockState(side);
       FluidState sideFluid = sideBlock.getFluidState();
       if (sideFluid.getType().isSame(this) && this.canPassThroughWall(direction, level, pos, block, side, sideBlock)) {
-        if (sideFluid.isSource() && ForgeEventFactory.canCreateFluidSource(level, side, sideBlock, sideFluid.canConvertToSource(level, side))) {
+        if (sideFluid.isSource() && EventHooks.canCreateFluidSource(level, side, sideBlock)) {
           sourceSides++;
         }
         maxSide = Math.max(maxSide, sideFluid.getAmount());
@@ -175,7 +244,6 @@ public abstract class InvertedFluid extends ForgeFlowingFluid {
     return minSlope;
   }
 
-  @Override
   protected boolean isWaterHole(BlockGetter level, Fluid fluid, BlockPos pos, BlockState block, BlockPos spreadPos, BlockState spreadBlock) {
     // recreation swapping downs for ups
     return this.canPassThroughWall(Direction.UP, level, pos, block, spreadPos, spreadBlock)

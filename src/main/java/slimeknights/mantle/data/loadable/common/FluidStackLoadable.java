@@ -1,10 +1,12 @@
 package slimeknights.mantle.data.loadable.common;
 
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidType;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidType;
 import slimeknights.mantle.data.loadable.ErrorFactory;
 import slimeknights.mantle.data.loadable.Loadable;
 import slimeknights.mantle.data.loadable.Loadables;
@@ -26,7 +28,7 @@ public class FluidStackLoadable {
   /** Getter for an item from a stack */
   private static final Function<FluidStack,Fluid> FLUID_GETTER = FluidStack::getFluid;
   /** Checks if a stack can be serialized to a primitive, ignoring count */
-  private static final Predicate<FluidStack> COMPACT_NBT = stack -> !stack.hasTag();
+  private static final Predicate<FluidStack> COMPACT_NBT = stack -> stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).isEmpty();
   /** Maps a fluid stack that may be empty to a strictly not empty one */
   private static final BiFunction<FluidStack,ErrorFactory,FluidStack> NOT_EMPTY = (stack, error) -> {
     if (stack.isEmpty()) {
@@ -41,7 +43,10 @@ public class FluidStackLoadable {
   /** Field for fluid stack count that allows empty */
   private static final LoadableField<Integer,FluidStack> AMOUNT = IntLoadable.FROM_ZERO.requiredField("amount", FluidStack::getAmount);
   /** Field for fluid stack count */
-  private static final LoadableField<CompoundTag,FluidStack> NBT = NBTLoadable.ALLOW_STRING.nullableField("nbt", FluidStack::getTag);
+  private static final LoadableField<CompoundTag,FluidStack> NBT = NBTLoadable.ALLOW_STRING.nullableField("nbt", stack -> {
+    CustomData data = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+    return data.isEmpty() ? null : data.copyTag();
+  });
 
 
   /* Optional */
@@ -73,7 +78,11 @@ public class FluidStackLoadable {
     if (fluid == Fluids.EMPTY || amount <= 0) {
       return FluidStack.EMPTY;
     }
-    return new FluidStack(fluid, amount, nbt);
+    FluidStack stack = new FluidStack(fluid, amount);
+    if (nbt != null && !nbt.isEmpty()) {
+      stack.set(DataComponents.CUSTOM_DATA, CustomData.of(nbt));
+    }
+    return stack;
   }
 
   /** Creates a loadable for a stack with a single item */

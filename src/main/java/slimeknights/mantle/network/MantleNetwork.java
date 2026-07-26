@@ -1,6 +1,6 @@
 package slimeknights.mantle.network;
 
-import net.minecraftforge.network.NetworkDirection;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import slimeknights.mantle.Mantle;
 import slimeknights.mantle.fluid.transfer.FluidContainerTransferPacket;
 import slimeknights.mantle.network.packet.DropLecternBookPacket;
@@ -31,5 +31,10 @@ public class MantleNetwork {
     INSTANCE.registerPacket(SwingArmPacket.class, SwingArmPacket::new, NetworkDirection.PLAY_TO_CLIENT);
     INSTANCE.registerPacket(OpenNamedBookPacket.class, OpenNamedBookPacket::new, NetworkDirection.PLAY_TO_CLIENT);
     INSTANCE.registerPacket(FluidContainerTransferPacket.class, FluidContainerTransferPacket::new, NetworkDirection.PLAY_TO_CLIENT);
+  }
+
+  /** Registers the NeoForge payload envelopes after packet ids have been assigned. */
+  public static void registerPayloads(RegisterPayloadHandlersEvent event) {
+    INSTANCE.registerPayloads(event);
   }
 }

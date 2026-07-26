@@ -2,6 +2,7 @@ package slimeknights.mantle.fluid.transfer;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.mojang.serialization.JsonOps;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.PackOutput.Target;
@@ -10,8 +11,8 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraftforge.common.crafting.CraftingHelper;
-import net.minecraftforge.common.crafting.conditions.ICondition;
+import net.neoforged.neoforge.common.crafting.CraftingHelper;
+import net.neoforged.neoforge.common.conditions.ICondition;
 import slimeknights.mantle.data.GenericDataProvider;
 import slimeknights.mantle.recipe.helper.FluidOutput;
 import slimeknights.mantle.recipe.helper.ItemOutput;
@@ -46,7 +47,7 @@ public abstract class AbstractFluidContainerTransferProvider extends GenericData
 
   /** Adds a transfer to be saved */
   protected void addTransfer(String name, IFluidContainerTransfer transfer, ICondition... conditions) {
-    addTransfer(new ResourceLocation(modId, name), transfer, conditions);
+    addTransfer(ResourceLocation.fromNamespaceAndPath(modId, name), transfer, conditions);
   }
 
   /** Adds generic fill and empty for a container */
@@ -102,7 +103,8 @@ public abstract class AbstractFluidContainerTransferProvider extends GenericData
       if (conditions.length != 0) {
         JsonArray array = new JsonArray();
         for (ICondition condition : conditions) {
-          array.add(CraftingHelper.serialize(condition));
+          array.add(ICondition.CODEC.encodeStart(JsonOps.INSTANCE, condition)
+            .getOrThrow(message -> new IllegalStateException("Failed to encode condition: " + message)));
         }
         element.getAsJsonObject().add("conditions", array);
       }

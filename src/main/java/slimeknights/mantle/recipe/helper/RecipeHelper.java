@@ -4,8 +4,8 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.Container;
 import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.RecipeType;
 import slimeknights.mantle.Mantle;
@@ -36,7 +36,7 @@ public class RecipeHelper {
    * @return  Optional of the recipe, or empty if the recipe is missing
    */
   public static <C extends Recipe<?>> Optional<C> getRecipe(RecipeManager manager, ResourceLocation name, Class<C> clazz) {
-    return manager.byKey(name).filter(clazz::isInstance).map(clazz::cast);
+    return manager.byKey(name).map(holder -> holder.value()).filter(clazz::isInstance).map(clazz::cast);
   }
 
   /**
@@ -49,8 +49,8 @@ public class RecipeHelper {
    * @param <C>  Return type
    * @return  List of recipes from the manager
    */
-  public static <I extends Container, T extends Recipe<I>, C extends T> List<C> getRecipes(RecipeManager manager, RecipeType<T> type, Class<C> clazz) {
-    return manager.byType(type).values().stream()
+  public static <I extends RecipeInput, T extends Recipe<I>, C extends T> List<C> getRecipes(RecipeManager manager, RecipeType<T> type, Class<C> clazz) {
+    return manager.getAllRecipesFor(type).stream().map(holder -> holder.value())
                   .filter(clazz::isInstance)
                   .map(clazz::cast)
                   .collect(Collectors.toList());
@@ -67,12 +67,13 @@ public class RecipeHelper {
    * @param <C>  Return type
    * @return  Recipe list
    */
-  public static <I extends Container, T extends Recipe<I>, C extends T> List<C> getUIRecipes(RecipeManager manager, RecipeType<T> type, Class<C> clazz, Predicate<? super C> filter) {
-    return manager.byType(type).values().stream()
+  public static <I extends RecipeInput, T extends Recipe<I>, C extends T> List<C> getUIRecipes(RecipeManager manager, RecipeType<T> type, Class<C> clazz, Predicate<? super C> filter) {
+    return manager.getAllRecipesFor(type).stream()
+                  .sorted(Comparator.comparing(holder -> holder.id()))
+                  .map(holder -> holder.value())
                   .filter(clazz::isInstance)
                   .map(clazz::cast)
                   .filter(filter)
-                  .sorted(Comparator.comparing(Recipe::getId))
                   .collect(Collectors.toList());
   }
 
@@ -92,8 +93,8 @@ public class RecipeHelper {
           boolean m2 = r2 instanceof IMultiRecipe<?>;
           if (m1 && !m2) return 1;
           if (!m1 && m2) return -1;
-          // fall back to recipe ID
-          return r1.getId().compareTo(r2.getId());
+          // Codec-backed recipes no longer own their IDs in 1.21; class name is stable for display.
+          return r1.getClass().getName().compareTo(r2.getClass().getName());
         })
         .flatMap((recipe) -> {
           // if its a multi recipe, extract child recipes and stream those
@@ -103,7 +104,7 @@ public class RecipeHelper {
             try {
               return ((IMultiRecipe<?>) recipe).getRecipes(access).stream();
             } catch (Exception e) {
-              Mantle.logger.error("Failed to fetch JEI recipes for multi recipe {} ({})", recipe.getId(), recipe, e);
+              Mantle.logger.error("Failed to fetch JEI recipes for multi recipe {}", recipe, e);
               return Stream.empty();
             }
           }
@@ -123,7 +124,7 @@ public class RecipeHelper {
    * @param clazz    Preferred recipe class type
    * @return  List of flattened recipes from the manager
    */
-  public static <I extends Container, T extends Recipe<I>, C> List<C> getJEIRecipes(RegistryAccess access, RecipeManager manager, RecipeType<T> type, Class<C> clazz) {
-    return getJEIRecipes(access, manager.byType(type).values().stream(), clazz);
+  public static <I extends RecipeInput, T extends Recipe<I>, C> List<C> getJEIRecipes(RegistryAccess access, RecipeManager manager, RecipeType<T> type, Class<C> clazz) {
+    return getJEIRecipes(access, manager.getAllRecipesFor(type).stream().map(holder -> holder.value()), clazz);
   }
 }

@@ -4,8 +4,6 @@ import com.google.gson.JsonSyntaxException;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemDisplayContext;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.IForgeRegistry;
 import slimeknights.mantle.data.loadable.Loadable;
 import slimeknights.mantle.data.loadable.mapping.EnumMapLoadable;
 import slimeknights.mantle.data.loadable.primitive.ResourceLocationLoadable;
@@ -19,10 +17,8 @@ public enum DisplayContextLoadable implements ResourceLocationLoadable<ItemDispl
 
   @Override
   public ItemDisplayContext fromKey(ResourceLocation name, String key, TypedMap context) {
-    IForgeRegistry<ItemDisplayContext> registry = ForgeRegistries.DISPLAY_CONTEXTS.get();
-    if (registry.containsKey(name)) {
-      ItemDisplayContext value = registry.getValue(name);
-      if (value != null) {
+    for (ItemDisplayContext value : ItemDisplayContext.values()) {
+      if (ResourceLocation.parse(value.getSerializedName()).equals(name)) {
         return value;
       }
     }
@@ -31,22 +27,17 @@ public enum DisplayContextLoadable implements ResourceLocationLoadable<ItemDispl
 
   @Override
   public ResourceLocation getKey(ItemDisplayContext object) {
-    IForgeRegistry<ItemDisplayContext> registry = ForgeRegistries.DISPLAY_CONTEXTS.get();
-    ResourceLocation location = registry.getKey(object);
-    if (location == null) {
-      throw new RuntimeException("ItemDisplayContext registry does not contain object " + object);
-    }
-    return location;
+    return ResourceLocation.parse(object.getSerializedName());
   }
 
   @Override
   public ItemDisplayContext decode(FriendlyByteBuf buffer, TypedMap context) {
-    return buffer.readRegistryIdUnsafe(ForgeRegistries.DISPLAY_CONTEXTS.get());
+    return ItemDisplayContext.BY_ID.apply(buffer.readVarInt());
   }
 
   @Override
   public void encode(FriendlyByteBuf buffer, ItemDisplayContext value) {
-    buffer.writeRegistryIdUnsafe(ForgeRegistries.DISPLAY_CONTEXTS.get(), value);
+    buffer.writeVarInt(value.getId());
   }
 
   @Override

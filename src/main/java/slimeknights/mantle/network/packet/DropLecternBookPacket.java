@@ -10,7 +10,7 @@ import net.minecraft.world.level.block.LecternBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.LecternBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.network.NetworkEvent.Context;
+import slimeknights.mantle.network.PacketContext;
 
 /**
  * Packet to drop the book as item from lectern
@@ -30,7 +30,7 @@ public class DropLecternBookPacket implements IThreadsafePacket {
 
   @SuppressWarnings("deprecation")
   @Override
-  public void handleThreadsafe(Context context) {
+  public void handleThreadsafe(PacketContext context) {
     ServerPlayer player = context.getSender();
     if(player == null) {
       return;

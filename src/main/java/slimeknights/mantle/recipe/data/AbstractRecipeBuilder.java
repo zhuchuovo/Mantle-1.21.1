@@ -88,13 +88,13 @@ public abstract class AbstractRecipeBuilder<T extends AbstractRecipeBuilder<T>> 
    */
   private ResourceLocation buildAdvancementInternal(ResourceLocation id, String folder) {
     this.advancementBuilder
-        .parent(new ResourceLocation("recipes/root"))
+        .parent(ResourceLocation.parse("recipes/root"))
         .rewards(AdvancementRewards.Builder.recipe(id))
         .requirements(RequirementsStrategy.OR);
     // we directly add the critera through the map as we want to replace it if already added instead of erroring
     // the rest of these setters all replace our previous recipe data
     this.advancementBuilder.criteria.put("has_the_recipe", new Criterion(RecipeUnlockedTrigger.unlocked(id)));
-    return new ResourceLocation(id.getNamespace(), "recipes/" + folder + "/" + id.getPath());
+    return ResourceLocation.fromNamespaceAndPath(id.getNamespace(), "recipes/" + folder + "/" + id.getPath());
   }
 
   /**

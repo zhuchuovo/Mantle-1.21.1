@@ -1,7 +1,7 @@
 package slimeknights.mantle.network.packet;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
+import slimeknights.mantle.network.PacketContext;
 
 import java.util.function.Supplier;
 
@@ -19,5 +19,5 @@ public interface ISimplePacket {
    * Handles receiving the packet
    * @param context  Packet context
    */
-  void handle(Supplier<NetworkEvent.Context> context);
+  void handle(Supplier<PacketContext> context);
 }

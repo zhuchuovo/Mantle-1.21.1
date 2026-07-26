@@ -2,6 +2,7 @@ package slimeknights.mantle.data.predicate.entity;
 
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.core.registries.Registries;
 import slimeknights.mantle.data.loadable.Loadables;
 import slimeknights.mantle.data.loadable.record.RecordLoadable;
 import slimeknights.mantle.data.predicate.IJsonPredicate;
@@ -14,7 +15,7 @@ public record HasMobEffectPredicate(MobEffect effect) implements LivingEntityPre
 
   @Override
   public boolean matches(LivingEntity living) {
-    return living.hasEffect(effect);
+    return living.hasEffect(living.level().registryAccess().registryOrThrow(Registries.MOB_EFFECT).wrapAsHolder(effect));
   }
 
   @Override

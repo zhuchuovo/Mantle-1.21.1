@@ -7,9 +7,9 @@ import lombok.RequiredArgsConstructor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraftforge.common.crafting.AbstractIngredient;
-import net.minecraftforge.common.crafting.IIngredientSerializer;
-import net.minecraftforge.common.crafting.VanillaIngredientSerializer;
+import net.neoforged.neoforge.common.crafting.AbstractIngredient;
+import net.neoforged.neoforge.common.crafting.IIngredientSerializer;
+import net.neoforged.neoforge.common.crafting.VanillaIngredientSerializer;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;

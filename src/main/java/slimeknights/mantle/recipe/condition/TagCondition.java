@@ -1,8 +1,7 @@
 package slimeknights.mantle.recipe.condition;
 
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSerializationContext;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import net.minecraft.core.Registry;
@@ -11,10 +10,8 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.storage.loot.LootContext;
-import net.minecraftforge.common.crafting.conditions.ICondition;
-import net.minecraftforge.common.crafting.conditions.IConditionSerializer;
+import net.neoforged.neoforge.common.conditions.ICondition;
 import slimeknights.mantle.Mantle;
-import slimeknights.mantle.util.JsonHelper;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
@@ -46,34 +43,12 @@ public abstract class TagCondition<T> implements ICondition {
     return getClass().getSimpleName() + "(\"" + tag + "\")";
   }
 
-  /** Serializer logic for tag keys */
-  public record Serializer<C extends TagCondition<?>>(ResourceLocation getID, Function<TagKey<?>,C> constructor) implements IConditionSerializer<C>, net.minecraft.world.level.storage.loot.Serializer<C> {
-    @Override
-    public void write(JsonObject json, C value) {
-      TagKey<?> tag = value.getTag();
-      // save some space in JSON by not setting registry if item (most common)
-      if (!Registries.ITEM.equals(tag.registry())) {
-        json.addProperty("registry", tag.registry().location().toString());
-      }
-      json.addProperty("tag", tag.location().toString());
-    }
-
-    @Override
-    public C read(JsonObject json) {
-      return constructor.apply(TagKey.create(
-        // default to item registry if registry is unset
-        ResourceKey.createRegistryKey(JsonHelper.getResourceLocation(json, "registry", Registries.ITEM.location())),
-        JsonHelper.getResourceLocation(json, "tag")));
-    }
-
-    @Override
-    public void serialize(JsonObject json, C value, JsonSerializationContext context) {
-      write(json, value);
-    }
-
-    @Override
-    public C deserialize(JsonObject json, JsonDeserializationContext context) {
-      return read(json);
-    }
+  /** Codec shared by the recipe condition and loot condition registries. */
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  protected static <C extends TagCondition<?>> MapCodec<C> codec(Function<TagKey<?>, C> constructor) {
+    return RecordCodecBuilder.mapCodec(instance -> instance.group(
+      ResourceLocation.CODEC.optionalFieldOf("registry", Registries.ITEM.location()).forGetter(value -> value.getTag().registry().location()),
+      ResourceLocation.CODEC.fieldOf("tag").forGetter(value -> value.getTag().location())
+    ).apply(instance, (registry, tag) -> constructor.apply(TagKey.create(ResourceKey.createRegistryKey(registry), tag))));
   }
 }

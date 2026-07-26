@@ -6,7 +6,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.network.NetworkEvent.Context;
+import slimeknights.mantle.network.PacketContext;
 import slimeknights.mantle.util.OffhandCooldownTracker;
 
 /** Packet to tell a client to swing an entity arm, as the vanilla one resets cooldown */
@@ -31,7 +31,7 @@ public class SwingArmPacket implements IThreadsafePacket {
   }
 
   @Override
-  public void handleThreadsafe(Context context) {
+  public void handleThreadsafe(PacketContext context) {
     HandleClient.handle(this);
   }
 

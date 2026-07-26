@@ -18,17 +18,17 @@ import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.commands.CommandRuntimeException;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.fml.ModContainer;
-import net.minecraftforge.fml.ModList;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModList;
 import org.apache.commons.lang3.text.WordUtils;
 import org.joml.Matrix4f;
+import org.joml.Matrix4fStack;
 import org.lwjgl.opengl.GL11;
 import slimeknights.mantle.Mantle;
 import slimeknights.mantle.client.book.BookLoader;
@@ -47,6 +47,12 @@ import java.nio.file.Paths;
 
 /** A command for different book operations, currently open and export_images */
 public class BookCommand {
+  /** Runtime exception retaining the translated command failure message on 1.21. */
+  private static class CommandRuntimeException extends RuntimeException {
+    private CommandRuntimeException(Component message) {
+      super(message.getString());
+    }
+  }
   private static final String BOOK_NOT_FOUND = "command.mantle.book_test.not_found";
 
   private static final String EXPORT_SUCCESS = "command.mantle.book.export.success";
@@ -207,9 +213,9 @@ public class BookCommand {
       Matrix4f matrix = (new Matrix4f()).setOrtho(0.0F, width, height, 0.0F, 1000.0F, zFar);
       RenderSystem.setProjectionMatrix(matrix, VertexSorting.ORTHOGRAPHIC_Z);
 
-      PoseStack stack = RenderSystem.getModelViewStack();
-      stack.pushPose();
-      stack.setIdentity();
+      Matrix4fStack stack = RenderSystem.getModelViewStack();
+      stack.pushMatrix();
+      stack.identity();
       stack.translate(0, 0, 1000F - zFar);
       stack.scale(scale, scale, 1);
       RenderSystem.applyModelViewMatrix();
@@ -300,7 +306,7 @@ public class BookCommand {
           }
         }
       } finally {
-        stack.popPose();
+        stack.popMatrix();
         RenderSystem.applyModelViewMatrix();
         RenderSystem.defaultBlendFunc();
         target.unbindWrite();

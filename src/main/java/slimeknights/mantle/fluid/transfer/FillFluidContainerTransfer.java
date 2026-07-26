@@ -12,9 +12,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 import org.apache.commons.lang3.function.TriFunction;
 import org.jetbrains.annotations.Nullable;
 import slimeknights.mantle.Mantle;
@@ -58,7 +58,7 @@ public class FillFluidContainerTransfer implements IFluidContainerTransfer.WithD
       return null;
     }
     int amount = this.fluid.getAmount(fluid.getFluid());
-    FluidStack toDrain = new FluidStack(fluid, amount);
+    FluidStack toDrain = fluid.copyWithAmount(amount);
     FluidStack simulated = handler.drain(toDrain.copy(), FluidAction.SIMULATE);
     if (simulated.getAmount() == amount) {
       FluidStack actual = handler.drain(toDrain.copy(), FluidAction.EXECUTE);
@@ -74,7 +74,7 @@ public class FillFluidContainerTransfer implements IFluidContainerTransfer.WithD
   public JsonObject serialize(JsonSerializationContext context) {
     JsonObject json = new JsonObject();
     json.addProperty("type", ID.toString());
-    json.add("input", input.toJson());
+    json.add("input", JsonHelper.serialize(Ingredient.CODEC, input));
     if (!result.isEmpty()) {
       json.add("result", result.serialize(false));
     }
@@ -91,7 +91,7 @@ public class FillFluidContainerTransfer implements IFluidContainerTransfer.WithD
     @Override
     public T deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
       JsonObject json = element.getAsJsonObject();
-      Ingredient input = Ingredient.fromJson(JsonHelper.getElement(json, "input"));
+      Ingredient input = JsonHelper.parse(Ingredient.CODEC, JsonHelper.getElement(json, "input"));
       ItemOutput result = EmptyFluidContainerTransfer.getResult(json);
       FluidIngredient fluid = FluidIngredient.LOADABLE.getIfPresent(json, "fluid");
       return factory.apply(input, result, fluid);

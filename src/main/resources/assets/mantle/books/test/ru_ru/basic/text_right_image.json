@@ -2,7 +2,7 @@
   "title": "Текст справа от изображения",
   "image": {
     "item": {
-      "tag": "forge:ingots/iron"
+      "tag": "c:ingots/iron"
     }
   },
   "text1": [

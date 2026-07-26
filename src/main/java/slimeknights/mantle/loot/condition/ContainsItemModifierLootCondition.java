@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
+import com.mojang.serialization.JsonOps;
 import lombok.RequiredArgsConstructor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
@@ -45,7 +46,7 @@ public class ContainsItemModifierLootCondition implements ILootModifierCondition
   public JsonObject serialize(JsonSerializationContext context) {
     JsonObject json = new JsonObject();
     json.addProperty("type", ID.toString());
-    json.add("ingredient", ingredient.toJson());
+    json.add("ingredient", Ingredient.CODEC.encodeStart(JsonOps.INSTANCE, ingredient).getOrThrow(JsonParseException::new));
     if (amountNeeded != 1) {
       json.addProperty("needed", amountNeeded);
     }
@@ -55,7 +56,7 @@ public class ContainsItemModifierLootCondition implements ILootModifierCondition
   /** Parses this from JSON */
   public static ContainsItemModifierLootCondition deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
     JsonObject json = GsonHelper.convertToJsonObject(element, "condition");
-    Ingredient ingredient = Ingredient.fromJson(GsonHelper.getAsJsonObject(json, "ingredient"));
+    Ingredient ingredient = Ingredient.CODEC.parse(JsonOps.INSTANCE, GsonHelper.getAsJsonObject(json, "ingredient")).getOrThrow(JsonParseException::new);
     int needed = GsonHelper.getAsInt(json, "needed", 1);
     return new ContainsItemModifierLootCondition(ingredient, needed);
   }

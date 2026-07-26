@@ -1,25 +1,31 @@
 package slimeknights.mantle.recipe.helper;
 
-import com.google.gson.JsonObject;
-import net.minecraft.network.FriendlyByteBuf;
+import com.mojang.serialization.MapCodec;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 
 import java.util.function.Function;
 
-/** Simple implementation of a recipe serializer with no properties other than recipe ID. */
+/** Serializer for recipes with no serialized properties. */
 public record SimpleRecipeSerializer<T extends Recipe<?>>(Function<ResourceLocation,T> constructor) implements RecipeSerializer<T> {
-  @Override
-  public T fromJson(ResourceLocation id, JsonObject pSerializedRecipe) {
-    return constructor.apply(id);
+  private T create() {
+    return constructor.apply(LoadableRecipeSerializer.UNBOUND_ID);
   }
 
   @Override
-  public T fromNetwork(ResourceLocation id, FriendlyByteBuf pBuffer) {
-    return constructor.apply(id);
+  public MapCodec<T> codec() {
+    return MapCodec.unit(this::create);
   }
 
   @Override
-  public void toNetwork(FriendlyByteBuf pBuffer, T pRecipe) {}
+  public StreamCodec<RegistryFriendlyByteBuf,T> streamCodec() {
+    // Unit codecs compare the value being encoded with the single instance
+    // captured by the codec. Recipes are independently constructed while
+    // loading on the server, so identity-based Recipe implementations fail
+    // that comparison during the 1.21 recipe synchronization packet.
+    return StreamCodec.of((buffer, recipe) -> {}, buffer -> create());
+  }
 }

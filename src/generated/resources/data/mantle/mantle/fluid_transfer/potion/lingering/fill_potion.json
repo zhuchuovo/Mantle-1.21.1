@@ -4,19 +4,19 @@
     {
       "type": "mantle:tag_filled",
       "registry": "minecraft:fluid",
-      "tag": "forge:potion"
+      "tag": "c:potion"
     },
     {
       "type": "mantle:tag_filled",
-      "tag": "forge:bottles/lingering"
+      "tag": "c:bottles/lingering"
     }
   ],
   "fluid": {
     "amount": 250,
-    "tag": "forge:potion"
+    "tag": "c:potion"
   },
   "input": {
-    "tag": "forge:bottles/lingering"
+    "tag": "c:bottles/lingering"
   },
   "result": "minecraft:lingering_potion"
 }

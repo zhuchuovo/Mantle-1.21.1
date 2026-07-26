@@ -5,10 +5,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import slimeknights.mantle.Mantle;
 import slimeknights.mantle.client.book.data.BookData;
 import slimeknights.mantle.client.book.data.element.TextData;
@@ -54,14 +56,17 @@ public class ContentStructure extends PageContent {
     }
 
     try {
-      CompoundTag compoundnbt = NbtIo.readCompressed(resource.open());
+      CompoundTag compoundnbt = NbtIo.readCompressed(resource.open(), NbtAccounter.unlimitedHeap());
       this.template.load(BuiltInRegistries.BLOCK.asLookup(), compoundnbt);
     } catch (IOException e) {
       e.printStackTrace();
       return;
     }
 
-    this.templateBlocks = this.template.palettes.get(0).blocks();
+    StructurePlaceSettings settings = new StructurePlaceSettings();
+    this.templateBlocks = BuiltInRegistries.BLOCK.stream()
+      .flatMap(block -> this.template.filterBlocks(BlockPos.ZERO, settings, block).stream())
+      .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
 
     for (int i = 0; i < this.templateBlocks.size(); i++) {
       StructureTemplate.StructureBlockInfo info = this.templateBlocks.get(i);

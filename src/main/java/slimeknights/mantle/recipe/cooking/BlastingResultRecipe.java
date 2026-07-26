@@ -1,15 +1,15 @@
 package slimeknights.mantle.recipe.cooking;
 
 import lombok.Getter;
-import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.AbstractCookingRecipe;
 import net.minecraft.world.item.crafting.BlastingRecipe;
 import net.minecraft.world.item.crafting.CookingBookCategory;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.SingleRecipeInput;
 import slimeknights.mantle.data.loadable.common.IngredientLoadable;
 import slimeknights.mantle.data.loadable.field.ContextKey;
 import slimeknights.mantle.data.loadable.field.LoadableField;
@@ -31,7 +31,7 @@ public class BlastingResultRecipe extends BlastingRecipe implements CookingResul
 
   private final ItemOutput result;
   public BlastingResultRecipe(ResourceLocation id, String group, CookingBookCategory category, Ingredient ingredient, ItemOutput result, float experience, int cookingTime) {
-    super(id, group, category, ingredient, ItemStack.EMPTY, experience, cookingTime);
+    super(group, category, ingredient, ItemStack.EMPTY, experience, cookingTime);
     this.result = result;
   }
 
@@ -41,12 +41,12 @@ public class BlastingResultRecipe extends BlastingRecipe implements CookingResul
   }
 
   @Override
-  public ItemStack getResultItem(RegistryAccess pRegistryAccess) {
+  public ItemStack getResultItem(HolderLookup.Provider pRegistryAccess) {
     return result.get();
   }
 
   @Override
-  public ItemStack assemble(Container pContainer, RegistryAccess pRegistryAccess) {
+  public ItemStack assemble(SingleRecipeInput pContainer, HolderLookup.Provider pRegistryAccess) {
     return result.copy();
   }
 }

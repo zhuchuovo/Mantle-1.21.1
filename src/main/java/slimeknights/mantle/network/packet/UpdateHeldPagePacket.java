@@ -5,7 +5,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.network.NetworkEvent.Context;
+import slimeknights.mantle.network.PacketContext;
 import slimeknights.mantle.client.book.BookHelper;
 
 /**
@@ -27,7 +27,7 @@ public class UpdateHeldPagePacket implements IThreadsafePacket {
   }
 
   @Override
-  public void handleThreadsafe(Context context) {
+  public void handleThreadsafe(PacketContext context) {
     Player player = context.getSender();
     if (player != null && this.page != null) {
       ItemStack stack = player.getItemInHand(hand);

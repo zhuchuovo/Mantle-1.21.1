@@ -8,8 +8,9 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.storage.loot.LootDataType;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraft.core.registries.Registries;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import slimeknights.mantle.command.argument.TagSourceArgument;
 import slimeknights.mantle.command.tags.ModifyTagCommand;
 
@@ -47,13 +48,13 @@ public class MantleCommand {
     TagSourceArgument.registerSuggestions();
 
     // register interesting sources
-    SourcesCommand.register(LootDataType.TABLE.directory(), (context, builder)
-      -> SharedSuggestionProvider.suggestResource(context.getSource().getServer().getLootData().getKeys(LootDataType.TABLE), builder));
+    SourcesCommand.register(Registries.elementsDirPath(Registries.LOOT_TABLE), (context, builder)
+      -> SharedSuggestionProvider.suggestResource(context.getSource().getServer().reloadableRegistries().getKeys(Registries.LOOT_TABLE), builder));
     SourcesCommand.register("recipes", (context, builder)
       -> SharedSuggestionProvider.suggestResource(context.getSource().getRecipeNames(), builder));
 
     // add command listener
-    MinecraftForge.EVENT_BUS.addListener(MantleCommand::registerCommand);
+    NeoForge.EVENT_BUS.addListener(MantleCommand::registerCommand);
   }
 
   /** Registers a sub command for the root Mantle command */

@@ -4,19 +4,19 @@
     {
       "type": "mantle:tag_filled",
       "registry": "minecraft:fluid",
-      "tag": "forge:potion"
+      "tag": "c:potion"
     },
     {
       "type": "mantle:tag_filled",
-      "tag": "forge:bottles/splash"
+      "tag": "c:bottles/splash"
     }
   ],
   "fluid": {
     "amount": 250,
-    "tag": "forge:potion"
+    "tag": "c:potion"
   },
   "input": {
-    "tag": "forge:bottles/splash"
+    "tag": "c:bottles/splash"
   },
   "result": "minecraft:splash_potion"
 }

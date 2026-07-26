@@ -1,5 +1,6 @@
 package slimeknights.mantle.recipe.condition;
 
+import com.mojang.serialization.MapCodec;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -12,7 +13,8 @@ import slimeknights.mantle.loot.MantleLoot;
 
 /** Inverted form of {@link TagEmptyCondition} as filled is way more common a desire than empty. */
 public class TagFilledCondition<T> extends TagCondition<T> implements LootItemCondition {
-  public static final Serializer<TagFilledCondition<?>> SERIALIZER = new Serializer<>(Mantle.getResource("tag_filled"), TagFilledCondition::new);
+  public static final ResourceLocation ID = Mantle.getResource("tag_filled");
+  public static final MapCodec<TagFilledCondition<?>> CODEC = TagCondition.codec(TagFilledCondition::new);
 
   public TagFilledCondition(TagKey<T> tag) {
     super(tag);
@@ -23,8 +25,8 @@ public class TagFilledCondition<T> extends TagCondition<T> implements LootItemCo
   }
 
   @Override
-  public ResourceLocation getID() {
-    return SERIALIZER.getID();
+  public MapCodec<? extends net.neoforged.neoforge.common.conditions.ICondition> codec() {
+    return CODEC;
   }
 
   @Override

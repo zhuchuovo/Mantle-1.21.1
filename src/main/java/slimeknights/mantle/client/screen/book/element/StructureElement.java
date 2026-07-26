@@ -1,7 +1,7 @@
 package slimeknights.mantle.client.screen.book.element;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.math.Transformation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -15,7 +15,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
-import net.minecraftforge.client.model.data.ModelData;
+import net.neoforged.neoforge.client.model.data.ModelData;
 import org.joml.AxisAngle4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -65,7 +65,8 @@ public class StructureElement extends SizedBookElement {
 
   @Override
   public void draw(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks, Font fontRenderer) {
-    MultiBufferSource.BufferSource buffer = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+    ByteBufferBuilder sharedBuffer = new ByteBufferBuilder(1536);
+    MultiBufferSource.BufferSource buffer = MultiBufferSource.immediate(sharedBuffer);
     PoseStack transform = graphics.pose();
     PoseStack.Pose lastEntryBeforeTry = transform.last();
 
@@ -153,6 +154,7 @@ public class StructureElement extends SizedBookElement {
     }
 
     buffer.endBatch();
+    sharedBuffer.close();
   }
 
   @Override

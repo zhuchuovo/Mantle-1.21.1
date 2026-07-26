@@ -1,6 +1,7 @@
 package slimeknights.mantle.block.entity;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.level.block.Block;
@@ -52,21 +53,41 @@ public class MantleBlockEntity extends BlockEntity {
   }
 
   /**
-   * Write to NBT that is synced to the client in {@link #getUpdateTag()} and in {@link #saveAdditional(CompoundTag)}
+   * Write to NBT that is synced to the client and persisted by {@link #saveAdditional(CompoundTag, HolderLookup.Provider)}.
    * @param nbt  NBT
    */
   protected void saveSynced(CompoundTag nbt) {}
 
-  @Override
-  public CompoundTag getUpdateTag() {
-    CompoundTag nbt = new CompoundTag();
+  /** Registry-aware synchronized data hook used by 1.21 component codecs. */
+  protected void saveSynced(CompoundTag nbt, HolderLookup.Provider registries) {
     saveSynced(nbt);
+  }
+
+  /** Transitional hook for block entities still using the pre-1.21 load signature. */
+  @Deprecated
+  public void load(CompoundTag nbt) {}
+
+  /** Registry-aware transitional load hook. */
+  public void load(CompoundTag nbt, HolderLookup.Provider registries) {
+    load(nbt);
+  }
+
+  @Override
+  protected void loadAdditional(CompoundTag nbt, HolderLookup.Provider registries) {
+    super.loadAdditional(nbt, registries);
+    load(nbt, registries);
+  }
+
+  @Override
+  public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+    CompoundTag nbt = new CompoundTag();
+    saveSynced(nbt, registries);
     return nbt;
   }
 
   @Override
-  public void saveAdditional(CompoundTag nbt) {
-    super.saveAdditional(nbt);
-    saveSynced(nbt);
+  protected void saveAdditional(CompoundTag nbt, HolderLookup.Provider registries) {
+    super.saveAdditional(nbt, registries);
+    saveSynced(nbt, registries);
   }
 }

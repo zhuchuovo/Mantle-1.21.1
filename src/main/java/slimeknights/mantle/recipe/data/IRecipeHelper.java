@@ -10,8 +10,8 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraftforge.common.crafting.conditions.ICondition;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.neoforge.common.conditions.ICondition;
+import slimeknights.mantle.registration.RegistryObject;
 import slimeknights.mantle.Mantle;
 import slimeknights.mantle.recipe.condition.TagFilledCondition;
 import slimeknights.mantle.registration.object.IdAwareObject;
@@ -35,7 +35,7 @@ public interface IRecipeHelper {
    * @return  Location for the mod
    */
   default ResourceLocation location(String name) {
-    return new ResourceLocation(getModId(), name);
+    return ResourceLocation.fromNamespaceAndPath(getModId(), name);
   }
 
   /**
@@ -163,7 +163,7 @@ public interface IRecipeHelper {
    * @return  Tag instance
    */
   default TagKey<Item> getItemTag(String modId, String name) {
-    return TagKey.create(Registries.ITEM, new ResourceLocation(modId, name));
+    return TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(modId, name));
   }
 
   /**
@@ -173,7 +173,7 @@ public interface IRecipeHelper {
    * @return  Tag instance
    */
   default TagKey<Fluid> getFluidTag(String modId, String name) {
-    return TagKey.create(Registries.FLUID, new ResourceLocation(modId, name));
+    return TagKey.create(Registries.FLUID, ResourceLocation.fromNamespaceAndPath(modId, name));
   }
 
   /**
