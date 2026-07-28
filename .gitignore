@@ -1,31 +1,44 @@
-#ant stuff
-/bin/
-/download/
-#Remove OS generated garbage
-*/.DS_Store
-.DS_Store
-.DS_Store?
-.Spotlight-V100
-.Trashes
-Icon?
-ehthumbs.db
-Thumbs.db
-#gradle stuff
-/.gradle
-/build/
-/run/
-#IDEA files from Gradle
+# Gradle caches and build output
+.gradle/
+build/
+run/
+out/
+
+# IDE files
 .idea/
-/*.iml
-/*.ipr
-/*.iws
-#Vim backups
+.vscode/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+*.launch
+
+# Logs and crash output
+*.log
+*.log.gz
+crash-reports/
+hs_err_pid*
+replay_pid*
+
+# Compiled and packaged files
+*.class
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Gradle Wrapper is required for a fresh clone
+!gradle/wrapper/gradle-wrapper.jar
+
+# OS and editor files
+.DS_Store
+Thumbs.db
 *~
-#manual version override
-version.properties
-#eclipse stuffs
-/*.classpath
-/*.project
-/.settings/
-/*.launch
-/out
+
+# Accidental empty repository created inside this project
+/Mantle-1.21.1/
