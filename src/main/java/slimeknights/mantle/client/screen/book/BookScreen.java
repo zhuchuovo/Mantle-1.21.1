@@ -89,6 +89,7 @@ public class BookScreen extends Screen {
 
   private double[] lastClick;
   private double[] lastDrag;
+  private boolean bookBackgroundRendered;
 
   // TODO: maybe make this a list with ability to add custom layers
   private static final ILayerRenderFunction[] LAYERS = {
@@ -117,7 +118,8 @@ public class BookScreen extends Screen {
   /** Gets the alt Minecraft font */
   public static Font getAltFont() {
     if (altFont == null) {
-      altFont = Minecraft.getInstance().font;
+      FontManager fontManager = Minecraft.getInstance().fontManager;
+      altFont = new Font(id -> fontManager.fontSets.get(Minecraft.ALT_FONT), false);
     }
     return altFont;
   }
@@ -125,7 +127,8 @@ public class BookScreen extends Screen {
   /** Gets the uniform version of the Minecraft font */
   public static Font getUniformFont() {
     if (uniformFont == null) {
-      uniformFont = Minecraft.getInstance().font;
+      FontManager fontManager = Minecraft.getInstance().fontManager;
+      uniformFont = new Font(id -> fontManager.fontSets.get(Minecraft.UNIFORM_FONT), false);
     }
     return uniformFont;
   }
@@ -162,6 +165,7 @@ public class BookScreen extends Screen {
       return;
     }
 
+    super.renderBackground(graphics, mouseX, mouseY, partialTicks);
     Font fontRenderer = getFontRenderer();
 
     if (debug) {
@@ -251,7 +255,19 @@ public class BookScreen extends Screen {
       }
     }
 
-    super.render(graphics, mouseX, mouseY, partialTicks);
+    bookBackgroundRendered = true;
+    try {
+      super.render(graphics, mouseX, mouseY, partialTicks);
+    } finally {
+      bookBackgroundRendered = false;
+    }
+  }
+
+  @Override
+  public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+    if (!bookBackgroundRendered) {
+      super.renderBackground(graphics, mouseX, mouseY, partialTicks);
+    }
   }
 
   private boolean shouldRenderPage(int pageNum, boolean rightSide) {

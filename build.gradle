@@ -38,9 +38,6 @@ sourceSets.main.resources {
 // the already-generated data remain enabled while the legacy datagen builders
 // are migrated separately.
 sourceSets.main.java {
-    // JEI is an optional integration and its 1.21 recipe-layout API is migrated
-    // after the core Mantle/TConstruct runtime compiles independently.
-    exclude 'slimeknights/mantle/plugin/jei/**'
     exclude 'slimeknights/mantle/datagen/*Provider.java'
     exclude 'slimeknights/mantle/recipe/data/**'
     exclude 'slimeknights/mantle/recipe/cooking/CookingRecipeBuilder.java'
