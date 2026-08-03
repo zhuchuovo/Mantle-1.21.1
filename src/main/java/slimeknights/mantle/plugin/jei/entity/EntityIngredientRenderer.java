@@ -1,16 +1,13 @@
 package slimeknights.mantle.plugin.jei.entity;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import lombok.RequiredArgsConstructor;
 import mezz.jei.api.ingredients.IIngredientRenderer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -19,6 +16,8 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 import slimeknights.mantle.Mantle;
 import slimeknights.mantle.recipe.ingredient.EntityIngredient;
 
@@ -81,7 +80,7 @@ public class EntityIngredientRenderer implements IIngredientRenderer<EntityIngre
           }
           // catch exceptions drawing the entity to be safe, any caught exceptions blacklist the entity
           try {
-            InventoryScreen.renderEntityInInventoryFollowsMouse(graphics, 0, 0, size, size, scale, 0.0F, 0.0F, 10.0F, livingEntity);
+            renderEntity(graphics, livingEntity, scale);
             return;
           } catch (Exception e) {
             Mantle.logger.error("Error drawing entity " + BuiltInRegistries.ENTITY_TYPE.getKey(type), e);
@@ -100,6 +99,34 @@ public class EntityIngredientRenderer implements IIngredientRenderer<EntityIngre
       RenderSystem.setShaderColor(1, 1, 1, 1);
       int offset = (size - 16) / 2;
       graphics.blit(MISSING, offset, offset, 0, 0, 16, 16, 16, 16);
+    }
+  }
+
+  /** Renders without the screen-space scissor used by {@code renderEntityInInventoryFollowsMouse}. */
+  private void renderEntity(GuiGraphics graphics, LivingEntity entity, int scale) {
+    float bodyRotation = entity.yBodyRot;
+    float rotation = entity.getYRot();
+    float xRotation = entity.getXRot();
+    float previousHeadRotation = entity.yHeadRotO;
+    float headRotation = entity.yHeadRot;
+
+    entity.yBodyRot = 180.0F;
+    entity.setYRot(180.0F);
+    entity.setXRot(0.0F);
+    entity.yHeadRotO = 180.0F;
+    entity.yHeadRot = 180.0F;
+
+    try {
+      Quaternionf camera = new Quaternionf();
+      Quaternionf pose = new Quaternionf().rotateZ((float)Math.PI);
+      Vector3f translation = new Vector3f(0.0F, entity.getBbHeight() / 2.0F, 0.0F);
+      InventoryScreen.renderEntityInInventory(graphics, size / 2.0F, size / 2.0F, scale / entity.getScale(), translation, pose, camera, entity);
+    } finally {
+      entity.yBodyRot = bodyRotation;
+      entity.setYRot(rotation);
+      entity.setXRot(xRotation);
+      entity.yHeadRotO = previousHeadRotation;
+      entity.yHeadRot = headRotation;
     }
   }
 
