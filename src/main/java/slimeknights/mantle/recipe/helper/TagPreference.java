@@ -69,6 +69,10 @@ public class TagPreference {
    */
   @SuppressWarnings("unchecked")
   public static <T> Optional<T> getPreference(TagKey<T> tag) {
+    // Recipe viewers may query outputs before the server config is available.
+    if (!Config.SERVER_SPEC.isLoaded()) {
+      return Optional.empty();
+    }
     // fetch cached value if we have one
     return (Optional<T>) PREFERENCE_CACHE.computeIfAbsent(tag, PREFERENCE_LOOKUP);
   }
