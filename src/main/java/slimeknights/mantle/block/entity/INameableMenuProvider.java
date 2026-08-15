@@ -41,4 +41,15 @@ public interface INameableMenuProvider extends MenuProvider, Nameable {
 	default Component getDisplayName() {
 		return getName();
 	}
+
+	/**
+	 * Tabbed GUIs (such as the Tinker Station) open a new menu while another one is
+	 * already open. Closing the client container first would grab and re-center the
+	 * mouse cursor on every tab switch, so keep the old screen until the new menu
+	 * arrives instead.
+	 */
+	@Override
+	default boolean shouldTriggerClientSideContainerClosingOnOpen() {
+		return false;
+	}
 }
