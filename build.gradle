@@ -3,9 +3,10 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
+    id 'net.neoforged.moddev' version '2.0.141'
 }
 
-apply plugin: 'net.neoforged.moddev'
+
 
 group = 'slimeknights.mantle'
 version = "${minecraft_version}-${mantle_version}"
